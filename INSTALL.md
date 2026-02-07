@@ -13,14 +13,14 @@
 
 **Option A: Manual Upload**
 
-1. Download the `wp-llm-connector` folder
+1. Download the `llm-connector-for-wp` folder
 2. Upload to `/wp-content/plugins/` via FTP/SFTP
 3. Or upload as ZIP via WordPress admin: Plugins > Add New > Upload Plugin
 
 **Option B: WP-CLI**
 
 ```bash
-wp plugin install wp-llm-connector.zip --activate
+wp plugin install llm-connector-for-wp.zip --activate
 ```
 
 ### Step 2: Activate Plugin
@@ -55,7 +55,7 @@ Use the API key you generated in step 4 to test the connection:
 
 ```bash
 curl -H "X-WP-LLM-API-Key: wpllm_your_key_here" \
-     https://yoursite.com/wp-json/wp-llm-connector/v1/health
+     https://yoursite.com/wp-json/llm-connector-for-wp/v1/health
 ```
 
 Replace `wpllm_your_key_here` with the actual API key you copied from WordPress.
@@ -124,8 +124,8 @@ php -i | grep memory_limit
 
 2. **Upload via FTP/SFTP**
    ```
-   /wp-content/plugins/wp-llm-connector/
-   ├── wp-llm-connector.php
+   /wp-content/plugins/llm-connector-for-wp/
+   ├── llm-connector-for-wp.php
    ├── includes/
    ├── assets/
    └── ...
@@ -134,13 +134,13 @@ php -i | grep memory_limit
 3. **Set permissions**
    ```bash
    # Plugin directory
-   chmod 755 /path/to/wp-content/plugins/wp-llm-connector
+   chmod 755 /path/to/wp-content/plugins/llm-connector-for-wp
    
    # PHP files
-   find /path/to/wp-content/plugins/wp-llm-connector -type f -name "*.php" -exec chmod 644 {} \;
+   find /path/to/wp-content/plugins/llm-connector-for-wp -type f -name "*.php" -exec chmod 644 {} \;
    
    # Assets
-   find /path/to/wp-content/plugins/wp-llm-connector/assets -type f -exec chmod 644 {} \;
+   find /path/to/wp-content/plugins/llm-connector-for-wp/assets -type f -exec chmod 644 {} \;
    ```
 
 4. **Activate**
@@ -150,7 +150,7 @@ php -i | grep memory_limit
 
 1. **Prepare ZIP file**
    - Ensure the plugin folder is zipped correctly
-   - The ZIP should contain `wp-llm-connector/` folder
+   - The ZIP should contain `llm-connector-for-wp/` folder
 
 2. **Upload**
    - WordPress Admin > Plugins > Add New
@@ -166,13 +166,13 @@ php -i | grep memory_limit
 cd /path/to/wordpress
 
 # Install from local ZIP
-wp plugin install /path/to/wp-llm-connector.zip --activate
+wp plugin install /path/to/llm-connector-for-wp.zip --activate
 
 # Or install from URL
-wp plugin install https://example.com/wp-llm-connector.zip --activate
+wp plugin install https://example.com/llm-connector-for-wp.zip --activate
 
 # Verify installation
-wp plugin list | grep wp-llm-connector
+wp plugin list | grep llm-connector-for-wp
 ```
 
 ### Post-Installation Setup
@@ -198,7 +198,7 @@ wp option get wp_llm_connector_settings --format=json
 
 ```bash
 # Test health endpoint (no auth required)
-curl https://yoursite.com/wp-json/wp-llm-connector/v1/health
+curl https://yoursite.com/wp-json/llm-connector-for-wp/v1/health
 
 # Expected: {"status":"ok","version":"0.1.0",...}
 ```
@@ -289,7 +289,7 @@ If using a firewall, allow:
 /wp-json/*
 
 # Allow specific connector endpoints
-/wp-json/wp-llm-connector/v1/*
+/wp-json/llm-connector-for-wp/v1/*
 ```
 
 #### Cloudflare / CDN
@@ -312,7 +312,7 @@ location ~ ^/wp-json/ {
 }
 
 # Optional: Restrict to specific IPs (if Claude Code has static IP)
-location ~ ^/wp-json/wp-llm-connector/ {
+location ~ ^/wp-json/llm-connector-for-wp/ {
     allow 1.2.3.4;  # Your LLM provider's IP
     deny all;
     try_files $uri $uri/ /index.php?$args;
@@ -342,7 +342,7 @@ Edit your Claude Code MCP config file, using the API key you generated in WordPr
 {
   "mcpServers": {
     "wordpress": {
-      "url": "https://yoursite.com/wp-json/wp-llm-connector/v1/",
+      "url": "https://yoursite.com/wp-json/llm-connector-for-wp/v1/",
       "transport": "http",
       "headers": {
         "X-WP-LLM-API-Key": "wpllm_your_api_key_here"
@@ -418,8 +418,8 @@ tail -f wp-content/debug.log
 **Solution**:
 ```bash
 # Deactivate and reactivate plugin
-wp plugin deactivate wp-llm-connector
-wp plugin activate wp-llm-connector
+wp plugin deactivate llm-connector-for-wp
+wp plugin activate llm-connector-for-wp
 
 # Or manually create table (see DEVELOPER_GUIDE.md)
 ```
@@ -474,7 +474,7 @@ When new versions are released:
    wp db export backup.sql
    
    # Backup plugin files
-   tar -czf wp-llm-connector-backup.tar.gz wp-content/plugins/wp-llm-connector
+   tar -czf llm-connector-for-wp-backup.tar.gz wp-content/plugins/llm-connector-for-wp
    ```
 
 2. **Deactivate Plugin**

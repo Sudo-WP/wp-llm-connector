@@ -36,7 +36,7 @@ WP LLM Connector creates a secure REST API bridge between your WordPress site an
 
 == Installation ==
 
-1. Upload the `wp-llm-connector` folder to the `/wp-content/plugins/` directory.
+1. Upload the `llm-connector-for-wp` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Navigate to Settings > LLM Connector.
 4. Generate an API key (copy it immediately as it's shown only once; this key will be used by LLM services to authenticate with your WordPress site).

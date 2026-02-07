@@ -5,7 +5,7 @@
 All API endpoints are relative to your WordPress REST API base:
 
 ```
-https://yoursite.com/wp-json/wp-llm-connector/v1/
+https://yoursite.com/wp-json/llm-connector-for-wp/v1/
 ```
 
 ## Authentication
@@ -26,7 +26,7 @@ Use the API key you generated in WordPress admin in the `X-WP-LLM-API-Key` heade
 
 ```bash
 curl -H "X-WP-LLM-API-Key: wpllm_abc123..." \
-     https://yoursite.com/wp-json/wp-llm-connector/v1/site-info
+     https://yoursite.com/wp-json/llm-connector-for-wp/v1/site-info
 ```
 
 ## Rate Limiting
@@ -323,7 +323,7 @@ Get content statistics for all post types.
 #!/bin/bash
 
 API_KEY="wpllm_your_api_key_here"
-BASE_URL="https://yoursite.com/wp-json/wp-llm-connector/v1"
+BASE_URL="https://yoursite.com/wp-json/llm-connector-for-wp/v1"
 
 # Health check (no auth)
 curl "${BASE_URL}/health"
@@ -343,7 +343,7 @@ curl -H "X-WP-LLM-API-Key: ${API_KEY}" \
 import requests
 
 API_KEY = "wpllm_your_api_key_here"
-BASE_URL = "https://yoursite.com/wp-json/wp-llm-connector/v1"
+BASE_URL = "https://yoursite.com/wp-json/llm-connector-for-wp/v1"
 
 headers = {
     "X-WP-LLM-API-Key": API_KEY
@@ -365,7 +365,7 @@ else:
 const axios = require('axios');
 
 const API_KEY = 'wpllm_your_api_key_here';
-const BASE_URL = 'https://yoursite.com/wp-json/wp-llm-connector/v1';
+const BASE_URL = 'https://yoursite.com/wp-json/llm-connector-for-wp/v1';
 
 async function getSiteInfo() {
   try {
@@ -397,7 +397,7 @@ For use with Claude Code or other MCP-compatible tools:
 {
   "mcpServers": {
     "wordpress": {
-      "url": "https://yoursite.com/wp-json/wp-llm-connector/v1/",
+      "url": "https://yoursite.com/wp-json/llm-connector-for-wp/v1/",
       "transport": "http",
       "headers": {
         "X-WP-LLM-API-Key": "wpllm_your_api_key_here"

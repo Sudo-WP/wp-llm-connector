@@ -4,7 +4,7 @@ namespace WP_LLM_Connector\API;
 use WP_LLM_Connector\Security\Security_Manager;
 
 class API_Handler {
-	private $namespace = 'wp-llm-connector/v1';
+	private $namespace = 'llm-connector-for-wp/v1';
 	private $security;
 
 	/**
@@ -113,7 +113,7 @@ class API_Handler {
 		if ( ! $this->security->is_enabled() ) {
 			return new \WP_Error(
 				'connector_disabled',
-				__( 'The LLM Connector is currently disabled.', 'wp-llm-connector' ),
+				__( 'The LLM Connector is currently disabled.', 'llm-connector-for-wp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -136,7 +136,7 @@ class API_Handler {
 		if ( empty( $api_key ) ) {
 			return new \WP_Error(
 				'missing_api_key',
-				__( 'API key is required.', 'wp-llm-connector' ),
+				__( 'API key is required.', 'llm-connector-for-wp' ),
 				array( 'status' => 401 )
 			);
 		}
@@ -147,7 +147,7 @@ class API_Handler {
 			$this->security->log_request( hash( 'sha256', $api_key ), 'auth_failed', array(), 401 );
 			return new \WP_Error(
 				'invalid_api_key',
-				__( 'Invalid API key.', 'wp-llm-connector' ),
+				__( 'Invalid API key.', 'llm-connector-for-wp' ),
 				array( 'status' => 401 )
 			);
 		}
@@ -161,7 +161,7 @@ class API_Handler {
 			$this->security->log_request( $api_key_hash, $endpoint_slug . '_denied', array(), 403 );
 			return new \WP_Error(
 				'endpoint_not_allowed',
-				__( 'This endpoint is not enabled.', 'wp-llm-connector' ),
+				__( 'This endpoint is not enabled.', 'llm-connector-for-wp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -172,7 +172,7 @@ class API_Handler {
 			$this->security->log_request( $api_key_hash, 'rate_limited', array(), 429 );
 			return new \WP_Error(
 				'rate_limit_exceeded',
-				__( 'Rate limit exceeded.', 'wp-llm-connector' ),
+				__( 'Rate limit exceeded.', 'llm-connector-for-wp' ),
 				array( 'status' => 429 )
 			);
 		}
@@ -183,7 +183,7 @@ class API_Handler {
 	/**
 	 * Extract the endpoint permission slug from a REST route.
 	 *
-	 * @param string $route Full route path (e.g. /wp-llm-connector/v1/site-info).
+	 * @param string $route Full route path (e.g. /llm-connector-for-wp/v1/site-info).
 	 * @return string|false Permission slug or false if not mapped.
 	 */
 	private function get_endpoint_slug( $route ) {

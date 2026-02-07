@@ -9,8 +9,8 @@ The WP LLM Connector is built with extensibility in mind. This guide will help y
 ### Directory Structure
 
 ```
-wp-llm-connector/
-├── wp-llm-connector.php          # Plugin bootstrap
+llm-connector-for-wp/
+├── llm-connector-for-wp.php          # Plugin bootstrap
 ├── uninstall.php                 # Cleanup on deletion
 ├── includes/
 │   ├── Core/                     # Core plugin logic
@@ -394,7 +394,7 @@ class Test_API_Handler extends WP_UnitTestCase {
     }
     
     public function test_site_info_endpoint() {
-        $request = new \WP_REST_Request('GET', '/wp-llm-connector/v1/site-info');
+        $request = new \WP_REST_Request('GET', '/llm-connector-for-wp/v1/site-info');
         $response = $this->api->get_site_info($request);
         
         $this->assertEquals(200, $response->get_status());
@@ -407,16 +407,16 @@ class Test_API_Handler extends WP_UnitTestCase {
 
 ```bash
 # Test health endpoint
-curl https://yoursite.local/wp-json/wp-llm-connector/v1/health
+curl https://yoursite.local/wp-json/llm-connector-for-wp/v1/health
 
 # Test with API key
 curl -H "X-WP-LLM-API-Key: wpllm_test_key" \
-     https://yoursite.local/wp-json/wp-llm-connector/v1/site-info
+     https://yoursite.local/wp-json/llm-connector-for-wp/v1/site-info
 
 # Test rate limiting (make 61 requests)
 for i in {1..61}; do
     curl -H "X-WP-LLM-API-Key: wpllm_test_key" \
-         https://yoursite.local/wp-json/wp-llm-connector/v1/site-info
+         https://yoursite.local/wp-json/llm-connector-for-wp/v1/site-info
 done
 ```
 

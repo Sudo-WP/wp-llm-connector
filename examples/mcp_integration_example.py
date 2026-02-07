@@ -37,7 +37,7 @@ class WordPressMCPServer:
     def __init__(self, wordpress_url: str, api_key: str):
         self.wordpress_url = wordpress_url.rstrip('/')
         self.api_key = api_key
-        self.base_url = f"{self.wordpress_url}/wp-json/wp-llm-connector/v1"
+        self.base_url = f"{self.wordpress_url}/wp-json/llm-connector-for-wp/v1"
         self.headers = {
             "X-WP-LLM-API-Key": api_key,
             "Content-Type": "application/json"

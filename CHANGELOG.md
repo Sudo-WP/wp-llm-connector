@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Minimum PHP**: 7.4
 - **Database**: Auto-creates audit log table
 - **License**: GPL v2 or later
-- **Text Domain**: wp-llm-connector
+- **Text Domain**: llm-connector-for-wp
 
 ### Future Enhancements Planned
 - Provider-specific UI configuration

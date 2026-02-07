@@ -44,7 +44,7 @@ This plugin creates a bridge between your WordPress site and AI LLM agents, allo
 ### Manual Installation
 
 1. Download the plugin files
-2. Upload the `wp-llm-connector` folder to `/wp-content/plugins/`
+2. Upload the `llm-connector-for-wp` folder to `/wp-content/plugins/`
 3. Activate the plugin through the WordPress admin
 4. Navigate to **Settings > LLM Connector**
 5. Generate an API key (this key will be used by LLM services to authenticate with your WordPress site)
@@ -82,7 +82,7 @@ Use the API key you generated in step 2 to test the connection with cURL:
 
 ```bash
 curl -H "X-WP-LLM-API-Key: wpllm_your_api_key_here" \
-     https://yoursite.com/wp-json/wp-llm-connector/v1/site-info
+     https://yoursite.com/wp-json/llm-connector-for-wp/v1/site-info
 ```
 
 Replace `wpllm_your_api_key_here` with the actual API key you copied from WordPress.
@@ -93,43 +93,43 @@ All endpoints require authentication via the `X-WP-LLM-API-Key` header.
 
 ### Health Check (No Auth)
 ```
-GET /wp-json/wp-llm-connector/v1/health
+GET /wp-json/llm-connector-for-wp/v1/health
 ```
 Returns connector status and version.
 
 ### Site Information
 ```
-GET /wp-json/wp-llm-connector/v1/site-info
+GET /wp-json/llm-connector-for-wp/v1/site-info
 ```
 Returns basic site configuration, WordPress version, PHP version, timezone, etc.
 
 ### Plugin List
 ```
-GET /wp-json/wp-llm-connector/v1/plugins
+GET /wp-json/llm-connector-for-wp/v1/plugins
 ```
 Returns all installed plugins with version, status, and author information.
 
 ### Theme List
 ```
-GET /wp-json/wp-llm-connector/v1/themes
+GET /wp-json/llm-connector-for-wp/v1/themes
 ```
 Returns all installed themes with version and active status.
 
 ### System Status
 ```
-GET /wp-json/wp-llm-connector/v1/system-status
+GET /wp-json/llm-connector-for-wp/v1/system-status
 ```
 Returns comprehensive system information: server configuration, PHP settings, database stats, filesystem permissions.
 
 ### User Count
 ```
-GET /wp-json/wp-llm-connector/v1/user-count
+GET /wp-json/llm-connector-for-wp/v1/user-count
 ```
 Returns user statistics by role.
 
 ### Post Statistics
 ```
-GET /wp-json/wp-llm-connector/v1/post-stats
+GET /wp-json/llm-connector-for-wp/v1/post-stats
 ```
 Returns content statistics for all post types.
 
@@ -147,7 +147,7 @@ Add to your Claude Code MCP settings, using the API key you generated in WordPre
 {
   "mcpServers": {
     "wordpress": {
-      "url": "https://yoursite.com/wp-json/wp-llm-connector/v1/",
+      "url": "https://yoursite.com/wp-json/llm-connector-for-wp/v1/",
       "transport": "http",
       "headers": {
         "X-WP-LLM-API-Key": "wpllm_your_api_key_here"
@@ -198,8 +198,8 @@ The plugin ONLY exposes data through the endpoints you explicitly enable. It doe
 ### Directory Structure
 
 ```
-wp-llm-connector/
-├── wp-llm-connector.php          # Main plugin file
+llm-connector-for-wp/
+├── llm-connector-for-wp.php          # Main plugin file
 ├── includes/
 │   ├── Core/
 │   │   ├── Plugin.php            # Main orchestrator

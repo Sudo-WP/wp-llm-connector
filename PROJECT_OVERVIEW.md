@@ -43,7 +43,7 @@
                     ▼
 ┌─────────────────────────────────────────────────────┐
 │              WordPress REST API                     │
-│         /wp-json/wp-llm-connector/v1/              │
+│         /wp-json/llm-connector-for-wp/v1/              │
 └───────────────────┬─────────────────────────────────┘
                     │
         ┌───────────┴────────────┐
@@ -147,8 +147,8 @@
 ## File Structure
 
 ```
-wp-llm-connector/
-├── wp-llm-connector.php          # Main plugin file
+llm-connector-for-wp/
+├── llm-connector-for-wp.php          # Main plugin file
 ├── uninstall.php                 # Cleanup script
 ├── README.md                     # Project overview
 ├── INSTALL.md                    # Installation guide

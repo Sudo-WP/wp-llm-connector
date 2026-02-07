@@ -8,7 +8,7 @@
 # you generated in WordPress (Settings > LLM Connector). This is NOT a Claude API key.
 WORDPRESS_URL="https://yoursite.com"
 API_KEY="wpllm_your_api_key_here"  # Use the API key from WordPress admin
-BASE_URL="${WORDPRESS_URL}/wp-json/wp-llm-connector/v1"
+BASE_URL="${WORDPRESS_URL}/wp-json/llm-connector-for-wp/v1"
 
 # Colors for output
 RED='\033[0;31m'
