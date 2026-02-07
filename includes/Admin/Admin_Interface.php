@@ -1,0 +1,342 @@
+<?php
+namespace WP_LLM_Connector\Admin;
+
+class Admin_Interface {
+
+	public function __construct() {
+		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+	}
+
+	public function add_admin_menu() {
+		add_options_page(
+			__( 'WP LLM Connector Settings', 'wp-llm-connector' ),
+			__( 'LLM Connector', 'wp-llm-connector' ),
+			'manage_options',
+			'wp-llm-connector',
+			array( $this, 'render_settings_page' )
+		);
+	}
+
+	public function register_settings() {
+		register_setting(
+			'wp_llm_connector_settings_group',
+			'wp_llm_connector_settings',
+			array( 'sanitize_callback' => array( $this, 'sanitize_settings' ) )
+		);
+	}
+
+	public function sanitize_settings( $input ) {
+		$sanitized = array();
+
+		$sanitized['enabled']        = isset( $input['enabled'] ) ? (bool) $input['enabled'] : false;
+		$sanitized['read_only_mode'] = isset( $input['read_only_mode'] ) ? (bool) $input['read_only_mode'] : true;
+		$sanitized['rate_limit']     = isset( $input['rate_limit'] ) ? absint( $input['rate_limit'] ) : 60;
+		$sanitized['log_requests']   = isset( $input['log_requests'] ) ? (bool) $input['log_requests'] : true;
+
+		// Clamp rate limit to valid range.
+		$sanitized['rate_limit'] = max( 1, min( 1000, $sanitized['rate_limit'] ) );
+
+		// Handle allowed endpoints.
+		$sanitized['allowed_endpoints'] = isset( $input['allowed_endpoints'] ) && is_array( $input['allowed_endpoints'] )
+			? array_map( 'sanitize_text_field', $input['allowed_endpoints'] )
+			: array();
+
+		// Preserve existing API keys (managed separately).
+		$current_settings          = get_option( 'wp_llm_connector_settings', array() );
+		$sanitized['api_keys']     = $current_settings['api_keys'] ?? array();
+
+		return $sanitized;
+	}
+
+	public function enqueue_admin_assets( $hook ) {
+		if ( 'settings_page_wp-llm-connector' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'wp-llm-connector-admin',
+			WP_LLM_CONNECTOR_PLUGIN_URL . 'assets/css/admin.css',
+			array(),
+			WP_LLM_CONNECTOR_VERSION
+		);
+
+		wp_enqueue_script(
+			'wp-llm-connector-admin',
+			WP_LLM_CONNECTOR_PLUGIN_URL . 'assets/js/admin.js',
+			array( 'jquery' ),
+			WP_LLM_CONNECTOR_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wp-llm-connector-admin',
+			'wpLlmConnector',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'wp_llm_connector_ajax' ),
+			)
+		);
+	}
+
+	public function render_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Handle API key actions.
+		$this->handle_api_key_actions();
+
+		$settings            = get_option( 'wp_llm_connector_settings', array() );
+		$available_endpoints = array(
+			'site_info'     => __( 'Site Information', 'wp-llm-connector' ),
+			'plugin_list'   => __( 'Plugin List', 'wp-llm-connector' ),
+			'theme_list'    => __( 'Theme List', 'wp-llm-connector' ),
+			'user_count'    => __( 'User Count', 'wp-llm-connector' ),
+			'post_stats'    => __( 'Post Statistics', 'wp-llm-connector' ),
+			'system_status' => __( 'System Status', 'wp-llm-connector' ),
+		);
+
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+			<?php settings_errors( 'wp_llm_connector_messages' ); ?>
+
+			<div class="wp-llm-connector-admin-container">
+				<div class="wp-llm-connector-main-settings">
+					<form method="post" action="options.php">
+						<?php settings_fields( 'wp_llm_connector_settings_group' ); ?>
+
+						<table class="form-table">
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Enable Connector', 'wp-llm-connector' ); ?></th>
+								<td>
+									<label>
+										<input type="checkbox" name="wp_llm_connector_settings[enabled]" value="1"
+											<?php checked( $settings['enabled'] ?? false, true ); ?>>
+										<?php esc_html_e( 'Allow LLM connections to this site', 'wp-llm-connector' ); ?>
+									</label>
+									<p class="description">
+										<?php esc_html_e( 'Master switch to enable/disable all API access', 'wp-llm-connector' ); ?>
+									</p>
+								</td>
+							</tr>
+
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Read-Only Mode', 'wp-llm-connector' ); ?></th>
+								<td>
+									<label>
+										<input type="checkbox" name="wp_llm_connector_settings[read_only_mode]" value="1"
+											<?php checked( $settings['read_only_mode'] ?? true, true ); ?>>
+										<?php esc_html_e( 'Enforce read-only access (recommended)', 'wp-llm-connector' ); ?>
+									</label>
+									<p class="description">
+										<?php esc_html_e( 'When enabled, LLMs can only read data, not modify anything', 'wp-llm-connector' ); ?>
+									</p>
+								</td>
+							</tr>
+
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Rate Limit', 'wp-llm-connector' ); ?></th>
+								<td>
+									<input type="number" name="wp_llm_connector_settings[rate_limit]"
+										value="<?php echo esc_attr( $settings['rate_limit'] ?? 60 ); ?>"
+										min="1" max="1000" class="small-text">
+									<span><?php esc_html_e( 'requests per hour per API key', 'wp-llm-connector' ); ?></span>
+									<p class="description">
+										<?php esc_html_e( 'Limit requests to prevent abuse', 'wp-llm-connector' ); ?>
+									</p>
+								</td>
+							</tr>
+
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Logging', 'wp-llm-connector' ); ?></th>
+								<td>
+									<label>
+										<input type="checkbox" name="wp_llm_connector_settings[log_requests]" value="1"
+											<?php checked( $settings['log_requests'] ?? true, true ); ?>>
+										<?php esc_html_e( 'Log all API requests', 'wp-llm-connector' ); ?>
+									</label>
+									<p class="description">
+										<?php esc_html_e( 'Keep an audit trail of all LLM access', 'wp-llm-connector' ); ?>
+									</p>
+								</td>
+							</tr>
+
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Allowed Endpoints', 'wp-llm-connector' ); ?></th>
+								<td>
+									<?php foreach ( $available_endpoints as $endpoint => $label ) : ?>
+										<label class="wp-llm-endpoint-checkbox">
+											<input type="checkbox"
+												name="wp_llm_connector_settings[allowed_endpoints][]"
+												value="<?php echo esc_attr( $endpoint ); ?>"
+												<?php checked( in_array( $endpoint, $settings['allowed_endpoints'] ?? array(), true ) ); ?>>
+											<?php echo esc_html( $label ); ?>
+										</label>
+									<?php endforeach; ?>
+									<p class="description">
+										<?php esc_html_e( 'Select which data endpoints LLMs can access', 'wp-llm-connector' ); ?>
+									</p>
+								</td>
+							</tr>
+						</table>
+
+						<?php submit_button( __( 'Save Settings', 'wp-llm-connector' ) ); ?>
+					</form>
+				</div>
+
+				<div class="wp-llm-connector-api-keys">
+					<h2><?php esc_html_e( 'API Keys', 'wp-llm-connector' ); ?></h2>
+
+					<?php $this->render_api_keys_section( $settings ); ?>
+				</div>
+
+				<div class="wp-llm-connector-info">
+					<h2><?php esc_html_e( 'Connection Information', 'wp-llm-connector' ); ?></h2>
+					<div class="info-box">
+						<h3><?php esc_html_e( 'API Endpoint', 'wp-llm-connector' ); ?></h3>
+						<code><?php echo esc_html( rest_url( 'wp-llm-connector/v1/' ) ); ?></code>
+
+						<h3><?php esc_html_e( 'Usage Example (cURL)', 'wp-llm-connector' ); ?></h3>
+						<pre class="wp-llm-code-block">curl -H "X-WP-LLM-API-Key: YOUR_API_KEY" \
+     <?php echo esc_html( rest_url( 'wp-llm-connector/v1/site-info' ) ); ?></pre>
+
+						<h3><?php esc_html_e( 'Available Endpoints', 'wp-llm-connector' ); ?></h3>
+						<ul>
+							<li><code>/health</code> - <?php esc_html_e( 'Health check (no auth required)', 'wp-llm-connector' ); ?></li>
+							<li><code>/site-info</code> - <?php esc_html_e( 'Basic site information', 'wp-llm-connector' ); ?></li>
+							<li><code>/plugins</code> - <?php esc_html_e( 'List all plugins', 'wp-llm-connector' ); ?></li>
+							<li><code>/themes</code> - <?php esc_html_e( 'List all themes', 'wp-llm-connector' ); ?></li>
+							<li><code>/system-status</code> - <?php esc_html_e( 'System health and configuration', 'wp-llm-connector' ); ?></li>
+							<li><code>/user-count</code> - <?php esc_html_e( 'User statistics', 'wp-llm-connector' ); ?></li>
+							<li><code>/post-stats</code> - <?php esc_html_e( 'Content statistics', 'wp-llm-connector' ); ?></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	private function render_api_keys_section( $settings ) {
+		$api_keys = $settings['api_keys'] ?? array();
+		?>
+
+		<form method="post" action="">
+			<?php wp_nonce_field( 'wp_llm_connector_generate_key', 'wp_llm_connector_key_nonce' ); ?>
+
+			<table class="wp-list-table widefat fixed striped">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Key Name', 'wp-llm-connector' ); ?></th>
+						<th><?php esc_html_e( 'Key Prefix', 'wp-llm-connector' ); ?></th>
+						<th><?php esc_html_e( 'Created', 'wp-llm-connector' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'wp-llm-connector' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'wp-llm-connector' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( empty( $api_keys ) ) : ?>
+						<tr>
+							<td colspan="5" class="wp-llm-empty-keys">
+								<?php esc_html_e( 'No API keys generated yet. Create one below to get started.', 'wp-llm-connector' ); ?>
+							</td>
+						</tr>
+					<?php else : ?>
+						<?php foreach ( $api_keys as $key_id => $key_data ) : ?>
+							<tr>
+								<td><?php echo esc_html( $key_data['name'] ?? __( 'Unnamed', 'wp-llm-connector' ) ); ?></td>
+								<td>
+									<code class="api-key-display">
+										<?php echo esc_html( $key_data['key_prefix'] ?? '****' ); ?>...
+									</code>
+								</td>
+								<td><?php echo esc_html( wp_date( 'Y-m-d H:i', $key_data['created'] ?? time() ) ); ?></td>
+								<td>
+									<?php if ( $key_data['active'] ?? true ) : ?>
+										<span class="status-active"><?php esc_html_e( 'Active', 'wp-llm-connector' ); ?></span>
+									<?php else : ?>
+										<span class="status-inactive"><?php esc_html_e( 'Inactive', 'wp-llm-connector' ); ?></span>
+									<?php endif; ?>
+								</td>
+								<td>
+									<button type="submit" name="revoke_key" value="<?php echo esc_attr( $key_id ); ?>"
+										class="button button-small button-link-delete"
+										onclick="return confirm('<?php echo esc_js( __( 'Are you sure you want to revoke this API key?', 'wp-llm-connector' ) ); ?>');">
+										<?php esc_html_e( 'Revoke', 'wp-llm-connector' ); ?>
+									</button>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+
+			<div class="wp-llm-generate-key">
+				<h3><?php esc_html_e( 'Generate New API Key', 'wp-llm-connector' ); ?></h3>
+				<input type="text" name="key_name"
+					placeholder="<?php echo esc_attr__( 'Key name (e.g., Claude Production)', 'wp-llm-connector' ); ?>"
+					class="regular-text" required>
+				<button type="submit" name="generate_key" class="button button-primary">
+					<?php esc_html_e( 'Generate API Key', 'wp-llm-connector' ); ?>
+				</button>
+			</div>
+		</form>
+
+		<?php
+	}
+
+	private function handle_api_key_actions() {
+		// Generate new key.
+		if ( isset( $_POST['generate_key'] ) && check_admin_referer( 'wp_llm_connector_generate_key', 'wp_llm_connector_key_nonce' ) ) {
+			$key_name = sanitize_text_field( wp_unslash( $_POST['key_name'] ?? 'Unnamed' ) );
+			$api_key  = \WP_LLM_Connector\Security\Security_Manager::generate_api_key();
+
+			$settings             = get_option( 'wp_llm_connector_settings', array() );
+			$settings['api_keys'] = $settings['api_keys'] ?? array();
+
+			$key_id                          = wp_generate_uuid4();
+			$settings['api_keys'][ $key_id ] = array(
+				'name'       => $key_name,
+				'key_hash'   => hash( 'sha256', $api_key ),
+				'key_prefix' => substr( $api_key, 0, 12 ),
+				'created'    => time(),
+				'active'     => true,
+			);
+
+			update_option( 'wp_llm_connector_settings', $settings );
+
+			add_settings_error(
+				'wp_llm_connector_messages',
+				'key_generated',
+				sprintf(
+					/* translators: %s: the generated API key */
+					__( 'API Key generated successfully: %s — Copy this key now. It cannot be shown again.', 'wp-llm-connector' ),
+					'<code>' . esc_html( $api_key ) . '</code>'
+				),
+				'success'
+			);
+		}
+
+		// Revoke key.
+		if ( isset( $_POST['revoke_key'] ) && check_admin_referer( 'wp_llm_connector_generate_key', 'wp_llm_connector_key_nonce' ) ) {
+			$key_id = sanitize_text_field( wp_unslash( $_POST['revoke_key'] ) );
+
+			$settings = get_option( 'wp_llm_connector_settings', array() );
+			if ( isset( $settings['api_keys'][ $key_id ] ) ) {
+				unset( $settings['api_keys'][ $key_id ] );
+				update_option( 'wp_llm_connector_settings', $settings );
+
+				add_settings_error(
+					'wp_llm_connector_messages',
+					'key_revoked',
+					__( 'API Key revoked successfully.', 'wp-llm-connector' ),
+					'success'
+				);
+			}
+		}
+	}
+}

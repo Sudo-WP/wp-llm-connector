@@ -1,0 +1,549 @@
+# Installation Guide
+
+## Quick Install (5 minutes)
+
+### Prerequisites
+
+- WordPress 5.8 or higher
+- PHP 7.4 or higher  
+- MySQL 5.6 or higher
+- HTTPS enabled (recommended for production)
+
+### Step 1: Upload Plugin
+
+**Option A: Manual Upload**
+
+1. Download the `wp-llm-connector` folder
+2. Upload to `/wp-content/plugins/` via FTP/SFTP
+3. Or upload as ZIP via WordPress admin: Plugins > Add New > Upload Plugin
+
+**Option B: WP-CLI**
+
+```bash
+wp plugin install wp-llm-connector.zip --activate
+```
+
+### Step 2: Activate Plugin
+
+1. Go to WordPress Admin > Plugins
+2. Find "WP LLM Connector"
+3. Click "Activate"
+
+### Step 3: Configure Settings
+
+1. Navigate to **Settings > LLM Connector**
+2. Check **"Enable Connector"**
+3. Keep **"Read-Only Mode"** enabled (recommended)
+4. Select allowed endpoints (start with "Site Information")
+5. Click **"Save Settings"**
+
+### Step 4: Generate API Key
+
+1. Scroll to **"API Keys"** section
+2. Enter a descriptive name (e.g., "Claude Production")
+3. Click **"Generate API Key"**
+4. **Copy the key immediately** (it will be hidden later)
+5. Store securely (password manager recommended)
+
+### Step 5: Test Connection
+
+```bash
+curl -H "X-WP-LLM-API-Key: wpllm_your_key_here" \
+     https://yoursite.com/wp-json/wp-llm-connector/v1/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "version": "0.1.0",
+  "enabled": true,
+  "read_only": true
+}
+```
+
+---
+
+## Detailed Installation
+
+### Server Requirements
+
+#### Minimum Requirements
+- **WordPress**: 5.8+
+- **PHP**: 7.4+ (8.0+ recommended)
+- **MySQL**: 5.6+ or MariaDB 10.0+
+- **Apache/Nginx**: With mod_rewrite enabled
+- **HTTPS**: SSL certificate installed
+
+#### Recommended Requirements
+- **PHP**: 8.1+
+- **Memory**: 256MB+ PHP memory limit
+- **MySQL**: 8.0+ or MariaDB 10.5+
+- **Server**: Dedicated or VPS (not shared hosting)
+
+#### Required PHP Extensions
+- `curl` - For API communication
+- `json` - For JSON processing
+- `openssl` - For secure key generation
+- `pdo` or `mysqli` - For database access
+
+### Pre-Installation Checklist
+
+```bash
+# Check PHP version
+php -v
+
+# Check MySQL version
+mysql --version
+
+# Verify WordPress REST API is working
+curl https://yoursite.com/wp-json/
+
+# Verify mod_rewrite is enabled (Apache)
+apache2ctl -M | grep rewrite
+
+# Check PHP memory limit
+php -i | grep memory_limit
+```
+
+### Installation Methods
+
+#### Method 1: Manual FTP/SFTP Upload
+
+1. **Download the plugin**
+   - Get the latest release
+   - Extract the ZIP file
+
+2. **Upload via FTP/SFTP**
+   ```
+   /wp-content/plugins/wp-llm-connector/
+   ├── wp-llm-connector.php
+   ├── includes/
+   ├── assets/
+   └── ...
+   ```
+
+3. **Set permissions**
+   ```bash
+   # Plugin directory
+   chmod 755 /path/to/wp-content/plugins/wp-llm-connector
+   
+   # PHP files
+   find /path/to/wp-content/plugins/wp-llm-connector -type f -name "*.php" -exec chmod 644 {} \;
+   
+   # Assets
+   find /path/to/wp-content/plugins/wp-llm-connector/assets -type f -exec chmod 644 {} \;
+   ```
+
+4. **Activate**
+   - WordPress Admin > Plugins > Activate "WP LLM Connector"
+
+#### Method 2: WordPress Admin Upload
+
+1. **Prepare ZIP file**
+   - Ensure the plugin folder is zipped correctly
+   - The ZIP should contain `wp-llm-connector/` folder
+
+2. **Upload**
+   - WordPress Admin > Plugins > Add New
+   - Click "Upload Plugin"
+   - Choose ZIP file
+   - Click "Install Now"
+   - Click "Activate"
+
+#### Method 3: WP-CLI
+
+```bash
+# Navigate to WordPress root
+cd /path/to/wordpress
+
+# Install from local ZIP
+wp plugin install /path/to/wp-llm-connector.zip --activate
+
+# Or install from URL
+wp plugin install https://example.com/wp-llm-connector.zip --activate
+
+# Verify installation
+wp plugin list | grep wp-llm-connector
+```
+
+### Post-Installation Setup
+
+#### 1. Verify Database Tables
+
+```sql
+-- Check if audit log table was created
+SHOW TABLES LIKE 'wp_llm_connector_audit_log';
+
+-- Verify table structure
+DESCRIBE wp_llm_connector_audit_log;
+```
+
+#### 2. Check Plugin Options
+
+```bash
+# Via WP-CLI
+wp option get wp_llm_connector_settings --format=json
+```
+
+#### 3. Test REST API Endpoints
+
+```bash
+# Test health endpoint (no auth required)
+curl https://yoursite.com/wp-json/wp-llm-connector/v1/health
+
+# Expected: {"status":"ok","version":"0.1.0",...}
+```
+
+---
+
+## Configuration
+
+### Initial Configuration
+
+#### Security Settings (Recommended)
+
+```
+☑ Enable Connector
+☑ Read-Only Mode (always keep enabled)
+☐ Allow write operations (disabled)
+```
+
+#### Rate Limiting
+
+- **Default**: 60 requests/hour
+- **Recommended for production**: 60-100
+- **Recommended for development**: 200+
+
+#### Logging
+
+```
+☑ Log all API requests
+```
+
+#### Allowed Endpoints
+
+Start conservative, enable more as needed:
+
+```
+☑ Site Information
+☑ System Status
+☐ Plugin List (enable if needed)
+☐ Theme List (enable if needed)
+☐ User Count (enable with caution)
+☐ Post Stats (enable if needed)
+```
+
+### Generating API Keys
+
+#### Best Practices
+
+1. **Descriptive Names**
+   - ✓ "Claude Production Server"
+   - ✓ "Development Testing"
+   - ✗ "Key 1"
+
+2. **One Key Per Environment**
+   - Production
+   - Staging
+   - Development
+
+3. **One Key Per Service**
+   - Separate keys for different LLM providers
+   - Different keys for different teams
+
+4. **Rotation Schedule**
+   - Rotate every 90 days minimum
+   - Rotate immediately if compromised
+
+#### Generating a Key
+
+1. Settings > LLM Connector > API Keys section
+2. Enter descriptive name
+3. Click "Generate API Key"
+4. Copy **entire key** immediately
+5. Store in password manager
+6. Never share via email/Slack/etc.
+
+### Network Configuration
+
+#### Firewall Rules
+
+If using a firewall, allow:
+
+```bash
+# Allow WordPress REST API
+/wp-json/*
+
+# Allow specific connector endpoints
+/wp-json/wp-llm-connector/v1/*
+```
+
+#### Cloudflare / CDN
+
+If using Cloudflare or similar:
+
+1. **Allow API routes to bypass cache**
+   - Page Rule: `yoursite.com/wp-json/*` - Cache Level: Bypass
+
+2. **Rate limiting**
+   - Use plugin's built-in rate limiting
+   - Or add Cloudflare rate limiting as additional layer
+
+#### Reverse Proxy (Nginx)
+
+```nginx
+# Allow REST API
+location ~ ^/wp-json/ {
+    try_files $uri $uri/ /index.php?$args;
+}
+
+# Optional: Restrict to specific IPs (if Claude Code has static IP)
+location ~ ^/wp-json/wp-llm-connector/ {
+    allow 1.2.3.4;  # Your LLM provider's IP
+    deny all;
+    try_files $uri $uri/ /index.php?$args;
+}
+```
+
+---
+
+## Connecting to Claude Code
+
+### Option 1: Manual MCP Configuration
+
+Edit your Claude Code MCP config file:
+
+**Location**: `~/.claude/mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "wordpress": {
+      "url": "https://yoursite.com/wp-json/wp-llm-connector/v1/",
+      "transport": "http",
+      "headers": {
+        "X-WP-LLM-API-Key": "wpllm_your_api_key_here"
+      },
+      "description": "WordPress site diagnostics"
+    }
+  }
+}
+```
+
+### Option 2: Automated Setup (Python)
+
+```bash
+cd examples/
+python3 mcp_integration_example.py
+```
+
+This will:
+1. Generate MCP configuration
+2. Save to Claude Code config directory
+3. Display setup instructions
+
+### Verification
+
+After configuration:
+
+1. **Restart Claude Code**
+2. **Test the connection**:
+   ```
+   Ask Claude: "Check the health of my WordPress site"
+   ```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. 404 Error on All Endpoints
+
+**Cause**: WordPress permalinks not set up correctly
+
+**Solution**:
+```bash
+# WordPress Admin > Settings > Permalinks
+# Click "Save Changes" (even without changes)
+
+# Or via WP-CLI
+wp rewrite flush
+```
+
+#### 2. 500 Internal Server Error
+
+**Cause**: PHP errors or missing dependencies
+
+**Solution**:
+```bash
+# Enable WordPress debugging
+# Add to wp-config.php:
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+
+# Check error log
+tail -f wp-content/debug.log
+```
+
+#### 3. Database Table Not Created
+
+**Cause**: Database permissions or activation issue
+
+**Solution**:
+```bash
+# Deactivate and reactivate plugin
+wp plugin deactivate wp-llm-connector
+wp plugin activate wp-llm-connector
+
+# Or manually create table (see DEVELOPER_GUIDE.md)
+```
+
+#### 4. API Key Not Working
+
+**Cause**: Key not copied correctly or settings not saved
+
+**Solution**:
+1. Regenerate API key
+2. Copy **entire** key including `wpllm_` prefix
+3. Verify "Enable Connector" is checked
+4. Save settings
+
+### Debug Mode
+
+Enable comprehensive debugging:
+
+```php
+// wp-config.php
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_DISPLAY', false);
+define('SAVEQUERIES', true);
+```
+
+Check logs:
+```bash
+tail -f wp-content/debug.log
+```
+
+### Testing Endpoints
+
+Use the included test script:
+
+```bash
+cd examples/
+./test_api.sh
+```
+
+---
+
+## Upgrading
+
+### From Future Versions
+
+When new versions are released:
+
+1. **Backup First**
+   ```bash
+   # Backup database
+   wp db export backup.sql
+   
+   # Backup plugin files
+   tar -czf wp-llm-connector-backup.tar.gz wp-content/plugins/wp-llm-connector
+   ```
+
+2. **Deactivate Plugin**
+   - WordPress Admin > Plugins > Deactivate
+
+3. **Upload New Version**
+   - Replace plugin files
+   - Or use WordPress update mechanism
+
+4. **Reactivate**
+   - WordPress Admin > Plugins > Activate
+
+5. **Verify Settings**
+   - Check Settings > LLM Connector
+   - Regenerate API keys if needed
+
+### Migration Between Sites
+
+```bash
+# Export settings from old site
+wp option get wp_llm_connector_settings > settings.json
+
+# Import to new site  
+wp option set wp_llm_connector_settings --format=json < settings.json
+
+# Note: API keys are environment-specific
+# Generate new keys on the new site
+```
+
+---
+
+## Uninstallation
+
+### Complete Removal
+
+1. **Deactivate Plugin**
+   - WordPress Admin > Plugins > Deactivate
+
+2. **Delete Plugin**
+   - WordPress Admin > Plugins > Delete
+   - This triggers `uninstall.php` which:
+     - Deletes all settings
+     - Drops audit log table
+     - Cleans up transients
+
+### Keep Data (Deactivate Only)
+
+- Just deactivate if you want to keep audit logs
+- Data persists until plugin is deleted
+
+---
+
+## Security Hardening
+
+### Production Deployment
+
+1. **Always Use HTTPS**
+2. **Enable Read-Only Mode**
+3. **Minimum Endpoints Enabled**
+4. **Strong API Keys Only**
+5. **Regular Key Rotation**
+6. **Monitor Audit Logs**
+7. **Rate Limiting Active**
+8. **Regular WordPress Updates**
+
+### Additional Security
+
+```php
+// wp-config.php
+
+// Disable file editing
+define('DISALLOW_FILE_EDIT', true);
+
+// Force SSL for admin
+define('FORCE_SSL_ADMIN', true);
+
+// Limit login attempts (use plugin)
+// Install: wp plugin install limit-login-attempts-reloaded --activate
+```
+
+---
+
+## Support
+
+If you encounter issues:
+
+1. Check this guide
+2. Review [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
+3. Check [API_DOCS.md](API_DOCS.md)
+4. Review audit logs in database
+5. Enable WordPress debug mode
+6. Contact support with specific error messages
+
+---
+
+**Installation complete! You're ready to connect your WordPress site to LLM agents.**
