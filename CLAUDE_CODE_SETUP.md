@@ -40,7 +40,7 @@ the file `~/.claude/claude_desktop_config.json`:
       "command": "python",
       "args": ["/home/sikam/mcp-servers/wordpress_mcp.py"],
       "env": {
-        "WP_LLM_SITE_URL": "https://paidikasymeon.gr",
+        "WP_LLM_SITE_URL": "https://YOUR-SITE.COM",
         "WP_LLM_API_KEY": "YOUR_API_KEY_HERE"
       }
     }
@@ -59,7 +59,7 @@ WordPress > Settings > LLM Connector.
       "command": "wsl",
       "args": ["python3", "/home/sikam/mcp-servers/wordpress_mcp.py"],
       "env": {
-        "WP_LLM_SITE_URL": "https://paidikasymeon.gr",
+        "WP_LLM_SITE_URL": "https://YOUR-SITE.COM",
         "WP_LLM_API_KEY": "YOUR_API_KEY_HERE"
       }
     }
@@ -107,7 +107,7 @@ To connect multiple WordPress sites, add separate entries:
       "command": "python",
       "args": ["/home/sikam/mcp-servers/wordpress_mcp.py"],
       "env": {
-        "WP_LLM_SITE_URL": "https://paidikasymeon.gr",
+        "WP_LLM_SITE_URL": "https://YOUR-SITE.COM",
         "WP_LLM_API_KEY": "prod_key_here"
       }
     },
@@ -115,7 +115,7 @@ To connect multiple WordPress sites, add separate entries:
       "command": "python",
       "args": ["/home/sikam/mcp-servers/wordpress_mcp.py"],
       "env": {
-        "WP_LLM_SITE_URL": "https://staging.paidikasymeon.gr",
+        "WP_LLM_SITE_URL": "https://YOUR-STAGING-SITE.COM",
         "WP_LLM_API_KEY": "staging_key_here"
       }
     }
