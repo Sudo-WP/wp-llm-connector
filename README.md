@@ -329,6 +329,7 @@ GPL v2 or later
 - **Author**: [AmIHacked.com](https://sudowp.com)
 - **Development**: [SudoWP.com](https://sudowp.com)
 - **Support**: [WPRepublic.com](https://sudowp.com)
+- **Organization Founded**: January 8, 2026
 
 ## Disclaimer
 
